@@ -1,22 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useDrag } from 'react-dnd';
 
-export default function Students() {
-  const [students, listStudents] = useState([]);
+const Student = ({ student, index, classroomId, moveStudent }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'STUDENT',
+    item: {student, index, classroomId },
+    collect: monitor => ({
+      isDragging: monitor.isDragging()
+    }),
+    end: (dropResult, monitor) => {
+      const { index: newIndex } = monitor.getItem();
+      const { index: dropIndex } = dropResult;
+      if (newIndex !== dropIndex) {
+        moveStudent(student.id, newIndex, dropIndex, classroomId);
+      }
+    }
+  });
 
-  useEffect(() => {
-    // POST request using fetch inside useEffect React hook
-    // const requestOptions = {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ name: 'test' })
-    // };
-    fetch('http://localhost:9000/api/students')
-      .then(response => response.json())
-      .then(data => listStudents(data));        
-  }, []);
-  return (    
-    <div>{students.map(student => <div key={student.id} >{student.name}</div>)}</div >
+  return (
+    <div ref={drag} style={{ opacity: isDragging ? 0.5 : 1 }}>
+      {student.name}
+    </div>
   );
+};
 
-}
-
+export default Student;
